@@ -6,6 +6,7 @@
 
 #Constants
 SEPARATOR_ID="$SEP$"
+TABLE_HLINE=[SEPARATOR_ID]
 
 #Global variablees
 _LastText=""
