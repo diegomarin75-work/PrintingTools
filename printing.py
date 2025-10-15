@@ -1,17 +1,44 @@
-# Text printing function library:
+# ---------------------------------------------------------------------------------------------------------------------
+# Text printing function library
+# ---------------------------------------------------------------------------------------------------------------------
 
-# SetSilentMode(Enabled)                                    # Set silent mode
-# Print(Text,Volatile=False,Partial=False)                  # Print messages on screen
-# PrintTable(Heading1,Heading2,ColAttributes,Rows,MaxWidth) # Print formatted table on screen
+# GetConsoleWidth()                                             # Gets actual width of console (9999 if console is redirected)
+# SetSilentMode(Enabled)                                        # Set silent mode
+# FormatParagraph(Str,Width,Indentation=0)                      # Formats long string as wrapped paragraph with indentation
+# Print(Text,Wheel=False,Volatile=False,Partial=False,Class="") # Print messages on screen
+# PrintTable(Heading1,Heading2,ColAttributes,Rows,MaxWidth)     # Print formatted table on screen
 
-#Constants
+# ---------------------------------------------------------------------------------------------------------------------
+# Import libraries
+# ---------------------------------------------------------------------------------------------------------------------
+import os
+import sys
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Constants
+# ---------------------------------------------------------------------------------------------------------------------
 SEPARATOR_ID="$SEP$"
 TABLE_HLINE=[SEPARATOR_ID]
+WHEEL_CHARS=['-','\\','|','/']
 
-#Global variablees
+# ---------------------------------------------------------------------------------------------------------------------
+# Global variablees
+# ---------------------------------------------------------------------------------------------------------------------
+_MessageCnt=0
 _LastText=""
 _LastVolatile=False  
 _SilentMode=False
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Get console width
+# ---------------------------------------------------------------------------------------------------------------------
+def GetConsoleWidth():
+  if(sys.stdout.isatty()):
+    Console=os.get_terminal_size()
+    ConsoleWidth=Console.columns-1
+  else:
+    ConsoleWidth=9999
+  return ConsoleWidth
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Set silent mode
@@ -20,33 +47,88 @@ def SetSilentMode(Enabled):
   global _SilentMode
   _SilentMode=Enabled
 
+# ----------------------------------------------------------------------------------
+# Format paragraphn
+# ----------------------------------------------------------------------------------
+def FormatParagraph(Str,Width,Indentation=0):
+  WorkStr=Str
+  WorkStr=WorkStr.replace("\n"," ").replace("\r","").replace("\t"," ")
+  while WorkStr.find("  ")!=-1:
+    WorkStr=WorkStr.replace("  "," ")
+  Words=WorkStr.split(" ")
+  OutLines=[]
+  Line=""
+  for Word in Words:
+    if len(Line+Word)<=Width:
+      Line+=Word+" "
+    else:
+      OutLines.append(Line)
+      Line=" "*Indentation+Word+" "
+  if len(Line)!=0:
+    OutLines.append(Line)
+  Output="\n".join(OutLines)
+  return Output
+
 # ---------------------------------------------------------------------------------------------------------------------
 # Print message
 # ---------------------------------------------------------------------------------------------------------------------
-def Print(Text,Volatile=False,Partial=False):
+def Print(Text,Wheel=False,Volatile=False,Partial=False,Class=""):
+  
+  #Declare global variables
   global _LastText
   global _LastVolatile
   global _SilentMode
+  global _MessageCnt
+  
+  #Do nothing on silent mode
   if _SilentMode==True:
     return
+  
+  #Initializations
+  ConsoleWidth=GetConsoleWidth()
+  OutText=Text
+  File=sys.stdout
+  
+  #Switch to stderr for errors
+  if Class.upper() in ["ERR","ERROR","FAIL","FAILURE"]:
+    File=sys.stderr
+  
+  #Apply wheel
+  if Wheel==True: 
+    OutText="["+WHEEL_CHARS[_MessageCnt%4]+"] "+OutText
+    _MessageCnt+=1
+  
+  #Apply class
+  if len(Class)!=0:
+    OutText="["+Class.upper()+"] "+OutText
+  
+  #Clean last output of last message was volatile
   if _LastVolatile==True:
-    print("\r",end="",flush=True)
-    print(" "*len(_LastText),end="\r",flush=True)
+    print("\r",end="",flush=True,file=File)
+    print(" "*len(_LastText),end="\r",flush=True,file=File)
+  
+  #Output message
   if Volatile==True or Partial==True:
-    print(Text,end="",flush=True)
+    OutText=OutText[:ConsoleWidth-2]
+    print(OutText,end="",flush=True,file=File)
   else:
-    print(Text)
-  _LastText=Text
+    print(OutText,file=File)
+  
+  #Save output
+  _LastText=OutText
   _LastVolatile=Volatile
 
 #----------------------------------------------------------------------------------------------------------------------
 # PrintTable
 #----------------------------------------------------------------------------------------------------------------------
-def PrintTable(Heading1,Heading2,ColAttributes,Rows,MaxWidth):
+def PrintTable(Heading1,Heading2,ColAttributes,Rows):
   
   #Exit if nothing to print
   if len(Rows)==0:
     return
+
+  #Get console width
+  MaxWidth=GetConsoleWidth()
 
   #Calculate data column widths
   Lengths=[0]*len(Rows[0])
@@ -155,7 +237,7 @@ def PrintTable(Heading1,Heading2,ColAttributes,Rows,MaxWidth):
 
   #Column count warning
   if(MaxColumn<len(Lengths)-1):
-    WarnMessage="Displaying {0} columns out of {1} columns due to console width".format(str(MaxColumn+1),str(len(Lengths)))
+    WarnMessage="Displaying {0} columns out of {1} columns due to console width ({2} columns)".format(str(MaxColumn+1),str(len(Lengths)),MaxWidth)
   else:
     WarnMessage=""
 
