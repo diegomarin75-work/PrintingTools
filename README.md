@@ -23,16 +23,18 @@ It is especially useful for creating clean command-line interfaces, progress upd
 1. Clone the repository containing this library:
 
 ```bash
-git clone <repository_url>
+git clone https://github.com/diegomarin75-work/PrintingTools.git
 ```
 
-Make the library available in your Python environment by adding its path to your PYTHONPATH:
+Make the library available in your Python environment by adding its path to your PYTHONPATH environment variable.
+
+Like this on unix-like environments:
 
 ```bash
 export PYTHONPATH=$PYTHONPATH:/path/to/library
 ```
 
-or on Windows:
+or like this on Windows:
 
 ```cmd
 set PYTHONPATH=%PYTHONPATH%;C:\path\to\library
@@ -58,6 +60,8 @@ Supports rotating wheel animation, class tags, volatile output (overwriting prev
 **Example:**
 
 ```python
+from printing import Print
+
 Print("Processing data...", Wheel=True, Volatile=True)
 ```
 
@@ -80,6 +84,8 @@ Note: A row in the data (Rows parameter) with a single column that contains cons
 **Example:**
 
 ```python
+from printing import PrintTable,TABLE_HLINE
+
 Heading1 = ["Name", "Age", "Country"]
 Heading2 = ["", "", ""]
 ColAttributes = ["L", "R", "L"]
@@ -128,6 +134,8 @@ Enabled (bool): True to suppress all print outputs, False to enable printing.
 **Example:**
 
 ```python
+from printing import SetSilentMode,Print
+
 SetSilentMode(True)
 Print("This will not be displayed.")
 SetSilentMode(False)
@@ -152,6 +160,8 @@ int — The console width or 9999 if redirected.
 **Example:**
 
 ```python
+from printing import GetConsoleWidth
+
 width = GetConsoleWidth()
 print(f"Console width: {width}")
 ```
@@ -168,14 +178,25 @@ Str (str): The input text to wrap.
 
 Width (int): The maximum line width.
 
-Indentation (int, optional): Number of spaces to indent each wrapped line (default: 0).
+Indentation (int, optional): Number of spaces to indent each wrapped line (default: 0) after the first one.
 
 #### **Returns:**
 str — The formatted, wrapped text.
 
 **Example:**
 ```python
-text = "This is a long string that will be wrapped nicely within the given width."
-print(FormatParagraph(text, Width=40, Indentation=4))
+from printing import FormatParagraph
+text = (
+  "This is a long string that will be wrapped nicely within the given width. "
+  "You can see how to use this function and how it works."
+)
+print(FormatParagraph("Indented text: "+text, Width=50, Indentation=15))
 ```
 
+That example will print on the console a text like this this:
+```
+Indented test: This is a long string that will be
+               wrapped nicely within the given
+               width. You can see how to use this
+               function and how it works.
+```
