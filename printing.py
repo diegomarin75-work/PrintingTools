@@ -123,6 +123,23 @@ def Print(Text,Wheel=False,Volatile=False,Partial=False,Class=""):
 #----------------------------------------------------------------------------------------------------------------------
 def PrintTable(Heading1,Heading2,ColAttributes,Rows):
   
+  #Calculate max column to print according to data length and maximun width
+  def CalculateTableWidth(Lengths):
+    i=0
+    TableWidth=1
+    MaxColumn=0
+    Truncated=False
+    for Len in Lengths:
+      TableWidth+=Len+1
+      MaxColumn=i
+      if(TableWidth>MaxWidth):
+        Truncated=True
+        MaxColumn-=1
+        TableWidth-=(Len+1)
+        break
+      i+=1
+    return TableWidth,MaxColumn,Truncated
+
   #Exit if nothing to print
   if len(Rows)==0:
     return
@@ -142,52 +159,29 @@ def PrintTable(Heading1,Heading2,ColAttributes,Rows):
       i+=1
 
   #Calculate max column to print according to data length and maximun width
-  i=0
-  TableWidth=1
-  MaxColumn=0
-  Truncated=False
-  for Len in Lengths:
-    TableWidth+=Len+1
-    MaxColumn=i
-    if(TableWidth>MaxWidth):
-      Truncated=True
-      MaxColumn-=1
-      TableWidth-=(Len+1)
-      break
-    i+=1
+  TableWidth,MaxColumn,Truncated=CalculateTableWidth(Lengths)
 
   #Adjust lengths if table is truncated and has resizeable columns
-  if Truncated==True and "".join(ColAttributes).find("W")!=-1:
+  RESIZABLE_COLUMNS=["W","M"]
+  if Truncated==True and any(c for c in "".join(ColAttributes) if c in RESIZABLE_COLUMNS):
     while(True):
       Resized=False
       i=0
       for ColHeader in Heading1:
-        if Lengths[i]>len(ColHeader) and ColAttributes[i].find("W")!=-1:
+        if Lengths[i]>len(ColHeader) and any(c for c in ColAttributes[i] if c in RESIZABLE_COLUMNS):
           Lengths[i]-=1
           Resized=True
         i+=1
       if Heading2!=None:
         i=0
         for ColHeader in Heading2:
-          if Lengths[i]>len(ColHeader) and ColAttributes[i].find("W")!=-1:
+          if Lengths[i]>len(ColHeader) and any(c for c in ColAttributes[i] if c in RESIZABLE_COLUMNS):
             Lengths[i]-=1
             Resized=True
           i+=1
       if Resized==False:
         break
-      i=0
-      TableWidth=1
-      MaxColumn=0
-      Truncated=False
-      for Len in Lengths:
-        TableWidth+=Len+1
-        MaxColumn=i
-        if(TableWidth>MaxWidth):
-          Truncated=True
-          MaxColumn-=1
-          TableWidth-=(Len+1)
-          break
-        i+=1
+      TableWidth,MaxColumn,Truncated=CalculateTableWidth(Lengths)
       if Truncated==False:
         break
 
