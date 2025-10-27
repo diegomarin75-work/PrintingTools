@@ -218,11 +218,14 @@ def PrintTable(Heading1,Heading2,ColAttributes,Rows):
       print("|",end="",flush=True)
       for Field in Row:
         if ColAttributes[i].find("L")!=-1:
-          print(str(Field).replace("\n","")[:Lengths[i]].ljust(Lengths[i])+"|",end="",flush=True)
+          FieldValue=str(Field).replace("\n","")[:Lengths[i]].ljust(Lengths[i])
         elif ColAttributes[i].find("R")!=-1:
-          print(str(Field).replace("\n","")[:Lengths[i]].rjust(Lengths[i])+"|",end="",flush=True)
+          FieldValue=str(Field).replace("\n","")[:Lengths[i]].rjust(Lengths[i])
         elif ColAttributes[i].find("C")!=-1:
-          print(str(Field).replace("\n","")[:Lengths[i]].center(Lengths[i])+"|",end="",flush=True)
+          FieldValue=str(Field).replace("\n","")[:Lengths[i]].center(Lengths[i])
+        else:
+          FieldValue=str(Field).replace("\n","")[:Lengths[i]].ljust(Lengths[i])
+        print(FieldValue+"|",end="",flush=True)
         if(i>=MaxColumn):
           break
         i+=1
