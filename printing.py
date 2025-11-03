@@ -209,8 +209,35 @@ def PrintTable(Heading1,Heading2,ColAttributes,Rows):
   print("")
   print(Separator)
 
-  #Print data
+  #Format data for multiline columns
+  LeveledRows=[]
   for Row in Rows:
+    if Row[0]==SEPARATOR_ID:
+      LeveledRows.append(Row)
+    else:
+      
+      #Calculate multilines
+      MultiRow=[]
+      for Field in Row:
+        if ColAttributes[i].find("M")!=-1:
+          Values=FormatParagraph(Field).split("\n")
+        else:
+          Values=[Field]
+        MultiRow.append(Values)
+      MaxValues=max([len(Values) for Values in MultiRow])
+      
+      #Make all columns same multiline
+      for c in range(0,MaxValues):
+        LeveledRow=[]
+        for Field in MultiRow:
+          if c<=len(Field)-1:
+            LeveledRow.append(Field[c])
+          else:
+            LeveledRow.append("")
+        LeveledRows.append(LeveledRow)
+
+  #Print data
+  for Row in LeveledRows:
     if Row[0]==SEPARATOR_ID:
       print(Separator)
     else:
