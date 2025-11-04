@@ -217,13 +217,15 @@ def PrintTable(Heading1,Heading2,ColAttributes,Rows):
     else:
       
       #Calculate multilines
+      i=0
       MultiRow=[]
       for Field in Row:
         if ColAttributes[i].find("M")!=-1:
-          Values=FormatParagraph(Field).split("\n")
+          Values=FormatParagraph(Field,Lengths[i]).split("\n")
         else:
           Values=[Field]
         MultiRow.append(Values)
+        i+=1
       MaxValues=max([len(Values) for Values in MultiRow])
       
       #Make all columns same multiline
