@@ -244,7 +244,7 @@ def PrintTable(Heading1,Heading2,ColAttributes,Rows):
       print(Separator)
     else:
       i=0
-      print("|",end="",flush=True)
+      Line="|"
       for Field in Row:
         if ColAttributes[i].find("L")!=-1:
           FieldValue=str(Field).replace("\n","")[:Lengths[i]].ljust(Lengths[i])
@@ -254,11 +254,12 @@ def PrintTable(Heading1,Heading2,ColAttributes,Rows):
           FieldValue=str(Field).replace("\n","")[:Lengths[i]].center(Lengths[i])
         else:
           FieldValue=str(Field).replace("\n","")[:Lengths[i]].ljust(Lengths[i])
-        print(FieldValue+"|",end="",flush=True)
+        Line+=FieldValue+"|"
         if(i>=MaxColumn):
           break
         i+=1
-      print("")
+      if len(Line.replace(" ","").replace("|",""))!=0:
+        print(Line)
   print(Separator)
 
   #Column count warning
