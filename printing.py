@@ -12,6 +12,7 @@
 # Import libraries
 # ---------------------------------------------------------------------------------------------------------------------
 import os
+import re
 import sys
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -123,6 +124,15 @@ def Print(Text,Wheel=False,Volatile=False,Partial=False,Class=""):
 #----------------------------------------------------------------------------------------------------------------------
 def PrintTable(Heading1,Heading2,ColAttributes,Rows):
   
+  #Modified length function that takes into acccount escape sequences that do not count for printed length on the screen
+  def Length(Str):
+    Match=re.search(r"\x1b\]8;;(.*?)\x1b\\(.*?)\x1b\]8;;\x1b\\",Str)
+    if Match!=None:
+      _,Name=Match.groups()
+      return len(Name)
+    else:
+      return len(Str)
+  
   #Calculate max column to print according to data length and maximun width
   def CalculateTableWidth(Lengths):
     i=0
@@ -153,9 +163,9 @@ def PrintTable(Heading1,Heading2,ColAttributes,Rows):
     i=0
     for Field in Row:
       if Heading2!=None:
-        Lengths[i]=max(max(max(Lengths[i],len(str(Field).replace("\n",""))),len(Heading1[i])),len(Heading2[i]))
+        Lengths[i]=max(max(max(Lengths[i],Length(str(Field).replace("\n",""))),Length(Heading1[i])),Length(Heading2[i]))
       else:
-        Lengths[i]=max(max(Lengths[i],len(str(Field).replace("\n",""))),len(Heading1[i]))
+        Lengths[i]=max(max(Lengths[i],Length(str(Field).replace("\n",""))),Length(Heading1[i]))
       i+=1
 
   #Calculate max column to print according to data length and maximun width
@@ -168,14 +178,14 @@ def PrintTable(Heading1,Heading2,ColAttributes,Rows):
       Resized=False
       i=0
       for ColHeader in Heading1:
-        if Lengths[i]>len(ColHeader) and any(c for c in ColAttributes[i] if c in RESIZABLE_COLUMNS):
+        if Lengths[i]>Length(ColHeader) and any(c for c in ColAttributes[i] if c in RESIZABLE_COLUMNS):
           Lengths[i]-=1
           Resized=True
         i+=1
       if Heading2!=None:
         i=0
         for ColHeader in Heading2:
-          if Lengths[i]>len(ColHeader) and any(c for c in ColAttributes[i] if c in RESIZABLE_COLUMNS):
+          if Lengths[i]>Length(ColHeader) and any(c for c in ColAttributes[i] if c in RESIZABLE_COLUMNS):
             Lengths[i]-=1
             Resized=True
           i+=1
@@ -247,18 +257,30 @@ def PrintTable(Heading1,Heading2,ColAttributes,Rows):
       Line="|"
       for Field in Row:
         if ColAttributes[i].find("L")!=-1:
-          FieldValue=str(Field).replace("\n","")[:Lengths[i]].ljust(Lengths[i])
+          if ColAttributes[i].find("U")!=-1:
+            FieldValue=str(Field).replace("\n","").ljust(Lengths[i])
+          else:
+            FieldValue=str(Field).replace("\n","")[:Lengths[i]].ljust(Lengths[i])
         elif ColAttributes[i].find("R")!=-1:
-          FieldValue=str(Field).replace("\n","")[:Lengths[i]].rjust(Lengths[i])
+          if ColAttributes[i].find("U")!=-1:
+            FieldValue=str(Field).replace("\n","").rjust(Lengths[i])
+          else:
+            FieldValue=str(Field).replace("\n","")[:Lengths[i]].rjust(Lengths[i])
         elif ColAttributes[i].find("C")!=-1:
-          FieldValue=str(Field).replace("\n","")[:Lengths[i]].center(Lengths[i])
+          if ColAttributes[i].find("U")!=-1:
+            FieldValue=str(Field).replace("\n","").center(Lengths[i])
+          else:
+            FieldValue=str(Field).replace("\n","")[:Lengths[i]].center(Lengths[i])
         else:
-          FieldValue=str(Field).replace("\n","")[:Lengths[i]].ljust(Lengths[i])
+          if ColAttributes[i].find("U")!=-1:
+            FieldValue=str(Field).replace("\n","").ljust(Lengths[i])
+          else:
+            FieldValue=str(Field).replace("\n","")[:Lengths[i]].ljust(Lengths[i])
         Line+=FieldValue+"|"
         if(i>=MaxColumn):
           break
         i+=1
-      if len(Line.replace(" ","").replace("|",""))!=0:
+      if Length(Line.replace(" ","").replace("|",""))!=0:
         print(Line)
   print(Separator)
 
@@ -269,5 +291,5 @@ def PrintTable(Heading1,Heading2,ColAttributes,Rows):
     WarnMessage=""
 
   #Warning
-  if(len(WarnMessage)!=0):
+  if(Length(WarnMessage)!=0):
     print(WarnMessage)    
