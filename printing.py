@@ -124,16 +124,33 @@ def Print(Text,Wheel=False,Volatile=False,Partial=False,Class=""):
 #----------------------------------------------------------------------------------------------------------------------
 def PrintTable(Heading1,Heading2,ColAttributes,Rows):
   
-  #Modified length function that takes into acccount escape sequences that do not count for printed length on the screen
+  # -------------------------------------------------------------------------------------------------------------------
+  # Modified length function that takes into acccount escape sequences that do not count for printed length on the screen
+  # -------------------------------------------------------------------------------------------------------------------
   def Length(Str):
+    
+    #URLs
     Match=re.search(r"\x1b\]8;;(.*?)\x1b\\(.*?)\x1b\]8;;\x1b\\",Str)
     if Match!=None:
       _,Name=Match.groups()
       return len(Name)
-    else:
-      return len(Str)
+    
+    #Ansi colors
+    Match=re.search(r"\033\[\d+m\033\[\d+m(.*?)\033\[0m",Str)
+    if Match!=None:
+      Text=Match.group(1)
+      return len(Text)
+    Match=re.search(r"\033\[\d+m(.*?)\033\[0m",Str)
+    if Match!=None:
+      Text=Match.group(1)
+      return len(Text)
+    
+    #Normal string
+    return len(Str)
   
-  #Calculate max column to print according to data length and maximun width
+  # -------------------------------------------------------------------------------------------------------------------
+  # Calculate max column to print according to data length and maximun width
+  # -------------------------------------------------------------------------------------------------------------------
   def CalculateTableWidth(Lengths):
     i=0
     TableWidth=1
@@ -150,6 +167,8 @@ def PrintTable(Heading1,Heading2,ColAttributes,Rows):
       i+=1
     return TableWidth,MaxColumn,Truncated
 
+  # -------------------------------------------------------------------------------------------------------------------
+
   #Exit if nothing to print
   if len(Rows)==0:
     return
@@ -157,15 +176,18 @@ def PrintTable(Heading1,Heading2,ColAttributes,Rows):
   #Get console width
   MaxWidth=GetConsoleWidth()
 
+  #Convert all row data to string and remove line breaks
+  Rows=[[str(Field).replace("\n","") for Field in Row] for Row in Rows]
+  
   #Calculate data column widths
   Lengths=[0]*len(Rows[0])
   for Row in Rows:
     i=0
     for Field in Row:
       if Heading2!=None:
-        Lengths[i]=max(max(max(Lengths[i],Length(str(Field).replace("\n",""))),Length(Heading1[i])),Length(Heading2[i]))
+        Lengths[i]=max([Lengths[i],Length(Field),Length(Heading1[i]),Length(Heading2[i])])
       else:
-        Lengths[i]=max(max(Lengths[i],Length(str(Field).replace("\n",""))),Length(Heading1[i]))
+        Lengths[i]=max([Lengths[i],Length(Field),Length(Heading1[i])])
       i+=1
 
   #Calculate max column to print according to data length and maximun width
@@ -256,26 +278,21 @@ def PrintTable(Heading1,Heading2,ColAttributes,Rows):
       i=0
       Line="|"
       for Field in Row:
-        if ColAttributes[i].find("L")!=-1:
-          if ColAttributes[i].find("U")!=-1:
-            FieldValue=str(Field).replace("\n","").ljust(Lengths[i])
+        if ColAttributes[i].find("A")==-1:
+          FieldValue=Field[:Lengths[i]]
+          if ColAttributes[i].find("L")!=-1:
+            FieldValue=FieldValue.ljust(Lengths[i])
+          elif ColAttributes[i].find("R")!=-1:
+            FieldValue=FieldValue.rjust(Lengths[i])
+          elif ColAttributes[i].find("C")!=-1:
+            FieldValue=FieldValue.center(Lengths[i])
           else:
-            FieldValue=str(Field).replace("\n","")[:Lengths[i]].ljust(Lengths[i])
-        elif ColAttributes[i].find("R")!=-1:
-          if ColAttributes[i].find("U")!=-1:
-            FieldValue=str(Field).replace("\n","").rjust(Lengths[i])
-          else:
-            FieldValue=str(Field).replace("\n","")[:Lengths[i]].rjust(Lengths[i])
-        elif ColAttributes[i].find("C")!=-1:
-          if ColAttributes[i].find("U")!=-1:
-            FieldValue=str(Field).replace("\n","").center(Lengths[i])
-          else:
-            FieldValue=str(Field).replace("\n","")[:Lengths[i]].center(Lengths[i])
+            FieldValue=FieldValue.ljust(Lengths[i])
         else:
-          if ColAttributes[i].find("U")!=-1:
-            FieldValue=str(Field).replace("\n","").ljust(Lengths[i])
+          if ColAttributes[i].find("L")!=-1:
+            FieldValue=Field+(" "*(Lengths[i]-Length(Field) if Lengths[i]-Length(Field)>0 else 0))
           else:
-            FieldValue=str(Field).replace("\n","")[:Lengths[i]].ljust(Lengths[i])
+            FieldValue=(" "*(Lengths[i]-Length(Field) if Lengths[i]-Length(Field)>0 else 0))+Field
         Line+=FieldValue+"|"
         if(i>=MaxColumn):
           break
