@@ -2,11 +2,23 @@
 # Text printing function library
 # ---------------------------------------------------------------------------------------------------------------------
 
-# GetConsoleWidth()                                             # Gets actual width of console (9999 if console is redirected)
-# SetSilentMode(Enabled)                                        # Set silent mode
-# FormatParagraph(Str,Width,Indentation=0)                      # Formats long string as wrapped paragraph with indentation
-# Print(Text,Wheel=False,Volatile=False,Partial=False,Class="") # Print messages on screen
-# PrintTable(Heading1,Heading2,ColAttributes,Rows,MaxWidth)     # Print formatted table on screen
+# GetConsoleWidth()
+# Gets actual width of console (9999 if console is redirected)
+
+# AnsiColor(Str,FgColor,BkColor=ANSI_BD_BLACK)
+# Prints string with ANSI colors
+
+# SetSilentMode(Enabled)
+# Set silent mode
+
+# FormatParagraph(Str,Width,Indentation=0)
+# Formats long string as wrapped paragraph with indentation
+
+# Print(Text,Wheel=False,Volatile=False,Partial=False,Class="")
+# Print messages on screen
+
+# PrintTable(Heading1,Heading2,ColAttributes,Rows,MaxWidth,ReturnOutput=False)
+# Print formatted table on screen
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Import libraries
@@ -18,9 +30,28 @@ import sys
 # ---------------------------------------------------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Constants
+# ---------------------------------------------------------------------------------------------------------------------
+
+#Table printing
 SEPARATOR_ID="$SEP$"
 TABLE_HLINE=[SEPARATOR_ID]
+
+#Message printing
 WHEEL_CHARS=['-','\\','|','/']
+
+#Ansi colors
+ANSI_ESCAPE_PREFIX="\033["
+ANSI_FD_BLACK  =30; ANSI_BD_BLACK  =40; ANSI_FB_BLACK  =90; ANSI_BB_BLACK  =100;
+ANSI_FD_RED    =31; ANSI_BD_RED    =41; ANSI_FB_RED    =91; ANSI_BB_RED    =101;
+ANSI_FD_GREEN  =32; ANSI_BD_GREEN  =42; ANSI_FB_GREEN  =92; ANSI_BB_GREEN  =102;
+ANSI_FD_YELLOW =33; ANSI_BD_YELLOW =43; ANSI_FB_YELLOW =93; ANSI_BB_YELLOW =103;
+ANSI_FD_BLUE   =34; ANSI_BD_BLUE   =44; ANSI_FB_BLUE   =94; ANSI_BB_BLUE   =104;
+ANSI_FD_MAGENTA=35; ANSI_BD_MAGENTA=45; ANSI_FB_MAGENTA=95; ANSI_BB_MAGENTA=105;
+ANSI_FD_CYAN   =36; ANSI_BD_CYAN   =46; ANSI_FB_CYAN   =96; ANSI_BB_CYAN   =106;
+ANSI_FD_WHITE  =37; ANSI_BD_WHITE  =47; ANSI_FB_WHITE  =97; ANSI_BB_WHITE  =107;
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Global variablees
@@ -40,6 +71,12 @@ def GetConsoleWidth():
   else:
     ConsoleWidth=9999
   return ConsoleWidth
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Gets string with ANSI colors
+# ---------------------------------------------------------------------------------------------------------------------
+def AnsiColor(Str,FgColor,BkColor=ANSI_BD_BLACK):
+  return f"{ANSI_ESCAPE_PREFIX}{FgColor}m{ANSI_ESCAPE_PREFIX}{BkColor}m{Str}{ANSI_ESCAPE_PREFIX}0m"
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Set silent mode
@@ -122,7 +159,7 @@ def Print(Text,Wheel=False,Volatile=False,Partial=False,Class=""):
 #----------------------------------------------------------------------------------------------------------------------
 # PrintTable
 #----------------------------------------------------------------------------------------------------------------------
-def PrintTable(Heading1,Heading2,ColAttributes,Rows):
+def PrintTable(Heading1,Heading2,ColAttributes,Rows,ReturnOutput=False):
   
   # -------------------------------------------------------------------------------------------------------------------
   # Modified length function that takes into acccount escape sequences that do not count for printed length on the screen
@@ -171,8 +208,14 @@ def PrintTable(Heading1,Heading2,ColAttributes,Rows):
 
   #Exit if nothing to print
   if len(Rows)==0:
-    return
+    if ReturnOutput==False:
+      return
+    else:
+      return []
 
+  #Init output
+  Output=[]
+  
   #Get console width
   MaxWidth=GetConsoleWidth()
 
@@ -221,25 +264,25 @@ def PrintTable(Heading1,Heading2,ColAttributes,Rows):
   Separator="-"*TableWidth
 
   #Print column headings
-  print(Separator)
-  print("|",end="",flush=True)
+  Output.append(Separator)
+  Line="|"
   i=0
   for Col in Heading1:
-    print(Col.center(Lengths[i])+"|",end="",flush=True)
+    Line+=Col.center(Lengths[i])+"|"
     if(i>=MaxColumn):
       break
     i+=1
+  Output.append(Line)
   if Heading2!=None:
-    print("")
-    print("|",end="",flush=True)
+    Line="|"
     i=0
     for Col in Heading2:
-      print(Col.center(Lengths[i])+"|",end="",flush=True)
+      Line+=Col.center(Lengths[i])+"|"
       if(i>=MaxColumn):
         break
       i+=1
-  print("")
-  print(Separator)
+    Output.append(Line)
+  Output.append(Separator)
 
   #Format data for multiline columns
   LeveledRows=[]
@@ -273,7 +316,7 @@ def PrintTable(Heading1,Heading2,ColAttributes,Rows):
   #Print data
   for Row in LeveledRows:
     if Row[0]==SEPARATOR_ID:
-      print(Separator)
+      Output.append(Separator)
     else:
       i=0
       Line="|"
@@ -298,8 +341,8 @@ def PrintTable(Heading1,Heading2,ColAttributes,Rows):
           break
         i+=1
       if Length(Line.replace(" ","").replace("|",""))!=0:
-        print(Line)
-  print(Separator)
+        Output.append(Line)
+  Output.append(Separator)
 
   #Column count warning
   if(MaxColumn<len(Lengths)-1):
@@ -309,4 +352,11 @@ def PrintTable(Heading1,Heading2,ColAttributes,Rows):
 
   #Warning
   if(Length(WarnMessage)!=0):
-    print(WarnMessage)    
+    Output.append(WarnMessage)
+  
+  #Print or return output
+  if ReturnOutput==False:
+    for Line in Output:
+      print(Line)
+  else:
+    return Output
