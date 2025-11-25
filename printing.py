@@ -57,6 +57,7 @@ ANSI_FD_WHITE  =37; ANSI_BD_WHITE  =47; ANSI_FB_WHITE  =97; ANSI_BB_WHITE  =107;
 # Global variablees
 # ---------------------------------------------------------------------------------------------------------------------
 _MessageCnt=0
+_BarStep=0
 _LastText=""
 _LastVolatile=False  
 _SilentMode=False
@@ -110,13 +111,14 @@ def FormatParagraph(Str,Width,Indentation=0):
 # ---------------------------------------------------------------------------------------------------------------------
 # Print message
 # ---------------------------------------------------------------------------------------------------------------------
-def Print(Text,Wheel=False,Volatile=False,Partial=False,Class=""):
+def Print(Text,Wheel=False,Volatile=False,Partial=False,Class="",BarProgress=None,BarLength=None):
   
   #Declare global variables
   global _LastText
   global _LastVolatile
   global _SilentMode
   global _MessageCnt
+  global _BarStep
   
   #Do nothing on silent mode
   if _SilentMode==True:
@@ -136,6 +138,14 @@ def Print(Text,Wheel=False,Volatile=False,Partial=False,Class=""):
     OutText="["+WHEEL_CHARS[_MessageCnt%4]+"] "+OutText
     _MessageCnt+=1
   
+  #Apply progress bar
+  if BarLength!=None:
+    if BarProgress!=None:
+      OutText="["+"#"*BarProgress+"."*(BarLength-BarProgress)+"] "+OutText
+    else:
+      _BarStep+=(1 if _BarStep<BarLength else 0)
+      OutText="["+"#"*_BarStep+"."*(BarLength-_BarStep)+"] "+OutText
+
   #Apply class
   if len(Class)!=0:
     OutText="["+Class.upper()+"] "+OutText
